@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - name: Include vars/main.local.yml
+      include_vars: vars/main.local.yml
+      ignore_errors: yes
+
+    - include_tasks: tasks/docker.yml
+
+    - include_tasks: tasks/maven.yml

@@ -1,0 +1,63 @@
+---
+- name: Check the build_modules variable is defined
+  fail:
+    msg: "The build_modules variable is not defined"
+  when: build_modules is not defined
+
+- name: Check the build_modules' items inside the allowed modules list
+  fail:
+    msg: "The {{ item.module }} is not allowed to build"
+  when: item.module not in ruoyi_allowed_modules
+  loop: "{{ build_modules }}"
+
+- name: Convert the build_modules to a string
+  set_fact:
+    build_moudles_str: "{{ build_modules | map(attribute='module') | join(',') }}"
+
+- name: Define the maven_local_repo_dir if not set
+  set_fact:
+    maven_local_repo_dir: "{{ ansible_env.HOME }}/.m2"
+  when: maven_local_repo_dir is not defined
+
+- name: Define the maven_jar_version if not set
+  set_fact:
+    maven_jar_version: "v1.0.0"
+  when: maven_jar_version is not defined
+
+- name: Define the maven_docker_volumes
+  set_fact:
+    maven_docker_volumes:
+      - "{{ playbook_dir }}/..:/usr/src"
+
+- name: Append the maven_local_repo_dir to maven_docker_volumes if maven_local_repo_use is true
+  set_fact:
+    maven_docker_volumes: "{{ maven_docker_volumes + [maven_local_repo_dir + ':/root/.m2'] }}"
+  when: maven_local_repo_use | default(true)
+
+- name: Build the maven modules
+  docker_container:
+    name: ruoyi-maven-builder
+    interactive: true
+    detach: false
+    docker_host: "{{ docker_sock }}"
+    volumes: "{{ maven_docker_volumes }}"
+    working_dir: /usr/src
+    image: maven:3.8-jdk-8
+    command: |
+      mvn -pl "{{ build_moudles_str }}" -am
+        clean package
+        -Dmaven.test.skip=true
+        -Djar.version="{{ maven_jar_version }}"
+        {{ additonal_maven_opts | default('') }}
+        -e
+  register: maven_build_output
+
+- name: Show maven_build_output
+  debug:
+    msg: "{{ maven_build_output.container.Output.split('\n') }}"
+
+- name: Remove the ruoyi-maven-builder container
+  docker_container:
+    name: ruoyi-maven-builder
+    state: absent
+    docker_host: "{{ docker_sock }}"

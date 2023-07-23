@@ -1,0 +1,54 @@
+---
+# 是否使用本地的 maven 库，可以加快 maven 打包速度，默认为 true
+# false 则全量下载 maven 依赖
+maven_local_repo_use: true
+# 本地的 maven repo 目录，可以自定义，默认为 ~/.m2
+maven_local_repo_dir: "{{ ansible_env.HOME }}/.m2"
+
+# maven 打包的版本号，可以自定义，默认为 v1.0.0
+maven_jar_version: "v1.0.0"
+
+# maven package 额外参数，可以自定义，默认为空
+# 例如：指定 profile 以及打印详细日志. `maven_additonal_opts: "-Pprod -X"`
+maven_additonal_opts: ~
+
+# 允许打包的模块，可以自定义，默认为所有微服务所需模块
+ruoyi_allowed_modules:
+  - ruoyi-gateway
+  - ruoyi-auth
+  - ruoyi-modules/ruoyi-system
+  - ruoyi-modules/ruoyi-gen
+  - ruoyi-modules/ruoyi-job
+  - ruoyi-modules/ruoyi-file
+  - ruoyi-visual/ruoyi-monitor
+
+# 打包的模块，可以自定义，默认为所有微服务所需模块
+build_modules:
+  -
+    module: ruoyi-gateway
+    image: ruoyi-gateway
+  -
+    module: ruoyi-auth
+    image: ruoyi-auth
+  -
+    module: ruoyi-modules/ruoyi-system
+    image: ruoyi-modules-system
+  -
+    module: ruoyi-modules/ruoyi-gen
+    image: ruoyi-modules-gen
+  -
+    module: ruoyi-modules/ruoyi-job
+    image: ruoyi-modules-job
+  -
+    module: ruoyi-modules/ruoyi-file
+    image: ruoyi-modules-file
+  -
+    module: ruoyi-visual/ruoyi-monitor
+    image: ruoyi-visual-monitor
+
+# Docker
+docker_username: oscaner
+docker_password: ~
+docker_registry_url: https://index.docker.io/v1/
+# defualt is "unix://var/run/docker.sock" by ansible
+docker_sock: ~

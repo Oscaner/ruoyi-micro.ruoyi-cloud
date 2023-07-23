@@ -1,0 +1,26 @@
+---
+- name: Define docker_installed variable
+  command: docker --version
+  register: docker_installed
+  ignore_errors: yes
+
+- name: Check the docker is installed
+  fail:
+    msg: "Docker is not installed"
+  when: docker_installed.rc != 0
+
+- name: Get the docker context
+  command: docker context inspect
+  register: docker_context_inspect
+
+- name: Define docker_sock if not set or is null
+  set_fact:
+    docker_sock: "{{ docker_context_inspect.stdout | from_json | first | default({}) | json_query('Endpoints.docker.Host') }}"
+  when: docker_sock is not defined or docker_sock is none or docker_sock == ''
+
+- name: Docker login
+  docker_login:
+    username: "{{ docker_username }}"
+    password: "{{ docker_password }}"
+    registry_url: "{{ docker_registry_url }}"
+    docker_host: "{{ docker_sock }}"
